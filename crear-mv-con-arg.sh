@@ -18,6 +18,13 @@ ruta_iso=$7
 # Calcular el tamaño del disco en MB
 size_disco_mb=$((size_disco_gb * 1024))
 
+# Crear el directorio para almacenar los discos duros virtuales
+# verificar si el directorio ya existe
+if [ ! -d "~/discos/$nombre_vm" ]; then
+  mkdir -p "~/discos/$nombre_vm" || { echo "Error al crear el directorio para almacenar los discos duros virtuales."; exit 1; }
+  echo "Se creó el directorio ~/discos/$nombre_vm"
+fi
+
 # Crear la máquina virtual
 VBoxManage createvm --name "$nombre_vm" --ostype "$tipo_so" --register || { echo "Error al crear la máquina virtual."; exit 1; }
 
@@ -28,13 +35,13 @@ VBoxManage modifyvm "$nombre_vm" --cpus "$num_cpus" --memory "$memoria_mb" --vra
 VBoxManage modifyvm "$nombre_vm" --nic1 nat || { echo "Error al configurar la red."; exit 1; }
 
 # Crear el disco duro virtual
-VBoxManage createhd --filename "/home/jose/discos/$nombre_vm/$nombre_vm.vdi" --size "$size_disco_mb" --variant Standard || { echo "Error al crear el disco duro virtual."; exit 1; }
+VBoxManage createhd --filename "~/discos/$nombre_vm/$nombre_vm.vdi" --size "$size_disco_mb" --variant Standard || { echo "Error al crear el disco duro virtual."; exit 1; }
 
 # Agregar el controlador SATA
 VBoxManage storagectl "$nombre_vm" --name "SATA Controller" --add sata --bootable on || { echo "Error al agregar el controlador SATA."; exit 1; }
 
 # Conectar el disco duro virtual al controlador SATA
-VBoxManage storageattach "$nombre_vm" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "/home/jose/discos/$nombre_vm/$nombre_vm.vdi" || { echo "Error al conectar el disco duro virtual."; exit 1; }
+VBoxManage storageattach "$nombre_vm" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "~/discos/$nombre_vm/$nombre_vm.vdi" || { echo "Error al conectar el disco duro virtual."; exit 1; }
 
 # Agregar el controlador IDE
 VBoxManage storagectl "$nombre_vm" --name "IDE Controller" --add ide || { echo "Error al agregar el controlador IDE."; exit 1; }
